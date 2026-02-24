@@ -58,8 +58,46 @@ $$Y = XW + \mathbf{1}_N b$$
 
 ---
 
-## 🛤️ Study Roadmap
-- [x] Matrix Dimensions & Broadcasting
-- [ ] Non-Linear Activation Functions (ReLU, Sigmoid)
-- [ ] Chaining Layers (The 2-Layer Neural Network)
-- [ ] Backpropagation Calculus
+## 5. The Two-Layer Neural Network
+
+A two-layer network (often called a Multi-Layer Perceptron with one hidden layer) introduces non-linearity and a second transformation. This allows the model to learn complex, non-linear patterns in data, such as those found in medical imaging or tourist metrics.
+
+### Mathematical Components
+For this architecture, we define two sets of weights and biases:
+* **Layer 1 (Hidden Layer):** $W_1 \in \mathbb{R}^{D \times H}$ and $b_1 \in \mathbb{R}^{1 \times H}$
+* **Layer 2 (Output Layer):** $W_2 \in \mathbb{R}^{H \times M}$ and $b_2 \in \mathbb{R}^{1 \times M}$
+* **Activation Function ($\sigma$):** Usually ReLU for the hidden layer.
+
+### The Forward Pass Equations
+
+1. **Hidden Layer Transformation ($Z_1$):**
+   We calculate the weighted sum of the input and apply the broadcasted bias:
+   $$Z_1 = XW_1 + \mathbf{1}_N b_1$$
+
+2. **Activation ($A_1$):**
+   We pass the hidden layer's output through a non-linear activation function (like ReLU):
+   $$A_1 = \max(0, Z_1)$$
+
+3. **Output Layer Transformation ($Y$):**
+   The activated output $A_1$ now serves as the input for the final layer:
+   $$Y = A_1 W_2 + \mathbf{1}_N b_2$$
+
+### Full Chained Equation
+$$Y = \sigma(XW_1 + \mathbf{1}_N b_1)W_2 + \mathbf{1}_N b_2$$
+
+---
+
+## 6. Dimension Tracking
+Keeping track of dimensions is critical when coding these networks from scratch.
+
+| Tensor | Description | Dimension |
+| :--- | :--- | :--- |
+| $X$ | Input Batch | $N \times D$ |
+| $W_1$ | Hidden Weights | $D \times H$ |
+| $b_1$ | Hidden Bias | $1 \times H$ |
+| $A_1$ | Hidden Activation | $N \times H$ |
+| $W_2$ | Output Weights | $H \times M$ |
+| $b_2$ | Output Bias | $1 \times M$ |
+| $Y$ | Final Output | $N \times M$ |
+
+---
