@@ -1,6 +1,6 @@
 # Deep Learning Linear Algebra
 
-As I study Deep Learning from scratch, I wanted to create this repo to annotate in a well-structured fashion the basics, as it is super useful when coding the math later in assignment. This serves as a personal reference for bridging the gap between raw data tensors and formal algebraic operations.
+As I study Deep Learning from scratch, I wanted to create this repo to annotate in a well-structured fashion the basics, as it is super useful when coding the math later in assignments. 
 
 ## 1. The Image-to-Matrix Bridge
 Since I am primarily working with computer vision, data in the form of images typically enters the system as a 4D tensor:
