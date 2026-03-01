@@ -168,7 +168,59 @@ When implementing Adam from scratch, the industry-standard default values establ
 * $\beta_2 = 0.999$ (Decay rate for the second moment)
 * $\epsilon = 10^{-8}$ (Numerical stability constant)
 
+## 9. The Full Lifecycle: Forward Pass to Weight Update
 
+When building out custom architectures for my applied data science and computer vision projects, understanding the entire lifecycle of a neural network is non-negotiable. The process is a continuous loop of three phases: the **Forward Pass**, **Backpropagation**, and the **Parameter Update**.
+
+Below is the complete algebraic breakdown for a standard Two-Layer Neural Network.
+
+### 9.1 The Forward Pass
+The forward pass is where the model makes its prediction. We push the input matrix $X$ through our learnable weights and non-linearities to get the final raw scores (logits).
+
+1. **First Linear Transformation:** $$Z_1 = X W_1 + \mathbf{1}_N b_1$$
+2. **Non-linear Activation (ReLU):** $$A_1 = \max(0, Z_1)$$
+3. **Second Linear Transformation (Scores):** $$Z_2 = A_1 W_2 + \mathbf{1}_N b_2$$
+4. **The Loss Function ($L$):** We evaluate how far off our scores $Z_2$ are from the ground truth $Y_{true}$. The loss collapses our high-dimensional predictions into a single, measurable scalar value:
+   $$L = \text{Loss}(Z_2, Y_{true})$$
+
+---
+
+## 10. Backpropagation: Gradients and The Jacobian
+
+To improve the model, I need to know how every single weight in $W_1$ and $W_2$ contributed to the final scalar error $L$. This is where the **Gradient** and the **Jacobian Matrix** come into play.
+
+### The Jacobian Matrix
+In vector calculus, if we have a function that maps an $n$-dimensional vector to an $m$-dimensional vector, the derivative of that function is the **Jacobian Matrix** (an $m \times n$ matrix of all partial derivatives). 
+
+For example, the local derivative of our hidden layer $Z_1$ with respect to the input $X$ is technically a massive Jacobian matrix. However, because our final Loss $L$ is a scalar ($m=1$), the final chain-rule derivative we care about is the **Gradient**—a vector (or matrix) pointing in the direction of the steepest ascent of the loss. 
+
+### The Vector-Jacobian Product (VJP)
+When writing this in code, constructing a full Jacobian matrix for millions of parameters would crash the system's memory. Instead, backpropagation relies on the **Vector-Jacobian Product**. We take the "upstream gradient" (how much the loss cares about the output of a layer) and multiply it by the local gradient (the Jacobian of that specific layer) to get the "downstream gradient" to pass backward.
+
+### 10.1 The Algebra of Backpropagation (Two-Layer Net)
+Using the chain rule, we compute the gradients starting from the end of the network and moving backward.
+
+**1. Gradient at the Output:**
+We start with the derivative of the loss with respect to our raw scores.
+$$dZ_2 = \frac{\partial L}{\partial Z_2}$$
+
+**2. Gradients of Layer 2 Parameters:**
+We use $dZ_2$ to find how to change $W_2$ and $b_2$. The gradient of the weights is the dot product of the transposed incoming activation and the upstream gradient.
+$$dW_2 = A_1^T \cdot dZ_2$$
+$$db_2 = \sum dZ_2 \quad \text{(summed across the batch dimension)}$$
+
+**3. Passing the Gradient Backward (Input to Layer 2):**
+To keep moving backward, we need the gradient with respect to the activation $A_1$.
+$$dA_1 = dZ_2 \cdot W_2^T$$
+
+**4. The ReLU Local Jacobian:**
+The derivative of the ReLU function $A_1 = \max(0, Z_1)$ is $1$ if $Z_1 > 0$, and $0$ otherwise. Instead of a full Jacobian, we apply this as an element-wise multiplication (Hadamard product, denoted by $\odot$) with a binary mask.
+$$dZ_1 = dA_1 \odot \mathbb{1}(Z_1 > 0)$$
+
+**5. Gradients of Layer 1 Parameters:**
+Finally, we compute the gradients for our first layer's weights and biases.
+$$dW_1 = X^T \cdot dZ_1$$
+$$db_1 = \sum dZ_1$$
 
 
 
