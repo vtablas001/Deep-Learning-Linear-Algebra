@@ -1,6 +1,6 @@
 # Deep Learning Linear Algebra
 
-As I study Deep Learning from scratch, I wanted to create this repo to annotate in a well-structured fashion the basics, as it is super useful when coding the math later in assignments. 
+As I study the basics of Deep Learning from scratch, I wanted to create this repo to annotate in a well-structured fashion the foundational math and keep coming back to refresh this repo as I progress both in content and uderstanding of the topic. Getting the matrix calculus right on paper is extremely useful when coding the math later in from-scratch implementations, especially when building out applied computer vision systems tools.
 
 ## 1. The Image-to-Matrix Bridge
 Since I am primarily working with computer vision, data in the form of images typically enters the system as a 4D tensor:
@@ -60,7 +60,7 @@ $$Y = XW + \mathbf{1}_N b$$
 
 ## 5. The Two-Layer Neural Network
 
-A two-layer network (often called a Multi-Layer Perceptron with one hidden layer) introduces non-linearity and a second transformation. This allows the model to learn complex, non-linear patterns in data, such as those found in medical imaging or tourist metrics.
+A two-layer network (often called a Multi-Layer Perceptron with one hidden layer) introduces non-linearity and a second transformation. This allows the model to learn complex, non-linear patterns in data, such as distinguishing anomalies in medical imaging or tracking metrics.
 
 ### Mathematical Components
 For this architecture, we define two sets of weights and biases:
@@ -101,3 +101,74 @@ Keeping track of dimensions is critical when coding these networks from scratch.
 | $Y$ | Final Output | $N \times M$ |
 
 ---
+
+## 7. The Backward Pass (Matrix Calculus)
+To train the network, we must compute the gradients of the loss ($L$) with respect to our learnable parameters ($W$ and $b$). Assuming we receive an upstream gradient $dY = \frac{\partial L}{\partial Y}$ of shape $(N \times M)$ from the loss function, we apply the chain rule using matrix multiplication.
+
+### Weight Gradient ($dW$)
+The gradient of the weights is the dot product of the transposed input and the upstream gradient. This maps the error back to the dimensions of the weights:
+$$dW = X^T \cdot dY \in \mathbb{R}^{D \times M}$$
+
+### Bias Gradient ($db$)
+The gradient of the bias is the sum of the upstream gradients across the batch dimension ($N$). Mathematically, this is the dot product of the transposed ones-vector and $dY$:
+$$db = \mathbf{1}_N^T \cdot dY = \sum_{i=1}^N dY_i \in \mathbb{R}^{1 \times M}$$
+
+### Input Gradient ($dX$)
+To continue backpropagation to earlier layers, we calculate the gradient with respect to the input by taking the dot product of the upstream gradient and the transposed weight matrix:
+$$dX = dY \cdot W^T \in \mathbb{R}^{N \times D}$$
+
+---
+
+## 8. Optimization Dynamics
+Once the gradients are computed, we use them to update the weights. As an economist, I view these optimizers as systems balancing "historical trends" (momentum) with "market volatility" (adaptive learning rates). Let $\alpha$ be the learning rate.
+
+### 8.1 Stochastic Gradient Descent (SGD) + Momentum
+Momentum accumulates a velocity vector ($v$) to smooth out noisy gradients and accelerate through flat regions of the loss landscape (where $\rho$ is the friction/decay rate, usually $0.9$):
+$$v_{t+1} = \rho v_t - \alpha dW$$
+$$W_{t+1} = W_t + v_{t+1}$$
+
+### 8.2 RMSProp
+RMSProp uses an exponentially decaying average of squared gradients ($cache$) to adaptively scale the learning rate per parameter. It punishes highly volatile weights and boosts stable ones:
+$$cache_{t+1} = \rho \cdot cache_t + (1 - \rho) \cdot dW^2$$
+$$W_{t+1} = W_t - \frac{\alpha \cdot dW}{\sqrt{cache_{t+1}} + \epsilon}$$
+
+### 8.3 Adam (Adaptive Moment Estimation)
+
+Adam is the hybrid workhorse for deep networks, combining the directional velocity of Momentum with the adaptive scaling of RMSProp. It is highly robust and often the default choice for training complex architectures because it handles sparse gradients and noisy data exceptionally well.
+
+To understand Adam, we track two distinct "moments" of the gradient over time step $t$. Let $\alpha$ be our learning rate.
+
+#### Step 1: The Exponential Moving Averages (The Moments)
+First, we calculate the moving averages of the gradient and its square. 
+* **The First Moment ($m_t$):** This acts like Momentum. It estimates the mean (first moment) of the gradients, tracking the general "trend" or direction.
+* **The Second Moment ($v_t$):** This acts like RMSProp. It estimates the uncentered variance (second moment) of the gradients, tracking the "volatility" or scale of the updates.
+
+$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) dW$$
+$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) (dW^2)$$
+
+#### Step 2: Bias Correction
+Because the moving averages $m$ and $v$ are initialized as vectors of zeros, they are heavily biased toward zero during the initial time steps. If we updated our weights using the raw $m_t$ and $v_t$, the network would take artificially small steps at the very beginning of training.
+
+To fix this, Adam applies a **Bias Correction** based on the current iteration/time step $t$:
+
+$$\hat{m}_t = \frac{m_t}{1 - \beta_1^t}$$
+$$\hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$
+
+*Mathematical Intuition:* Notice that in the first few iterations, $\beta^t$ is close to $1$, so the denominator $(1 - \beta^t)$ is very small. Dividing by a tiny fraction scales the $m$ and $v$ vectors up, counteracting the zero-initialization. As $t$ grows large (later in training), $\beta^t$ approaches $0$, the denominator approaches $1$, and the bias correction gracefully turns itself off.
+
+#### Step 3: The Weight Update
+Finally, we use the bias-corrected moments to update the parameters. We step in the direction of the trend ($\hat{m}_t$), but we scale the step size down for highly volatile weights by dividing by the square root of $\hat{v}_t$. The $\epsilon$ term is a tiny constant added to the denominator strictly to prevent a division by zero error.
+
+$$W_t = W_{t-1} - \frac{\alpha \cdot \hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}$$
+
+#### Standard Hyperparameters
+When implementing Adam from scratch, the industry-standard default values established in the original Kingma & Ba paper are:
+* $\alpha = 0.001$ (Learning rate)
+* $\beta_1 = 0.9$ (Decay rate for the first moment)
+* $\beta_2 = 0.999$ (Decay rate for the second moment)
+* $\epsilon = 10^{-8}$ (Numerical stability constant)
+
+
+
+
+
