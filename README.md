@@ -131,7 +131,7 @@ $$W_{t+1} = W_t + v_{t+1}$$
 ### 8.2 RMSProp
 RMSProp uses an exponentially decaying average of squared gradients ($cache$) to adaptively scale the learning rate per parameter. It punishes highly volatile weights and boosts stable ones:
 $$cache_{t+1} = \rho \cdot cache_t + (1 - \rho) \cdot dW^2$$
-$$W_{t+1} = W_t - \frac{\alpha \cdot dW}{\sqrt{cache_{t+1}} + \epsilon}$$
+$$W_{t+1} = W_t - \frac{\alpha \cdot dW}{\sqrt{cache_{t+1} + \epsilon}}$$
 
 ### 8.3 Adam (Adaptive Moment Estimation)
 
