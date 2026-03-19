@@ -27,6 +27,7 @@ $$W \in \mathbb{R}^{D \times M}$$
 
 ### Bias Vector ($b$)
 The bias is a row vector providing a learnable offset for each output neuron:
+
 $$b = \begin{bmatrix} b_1 & b_2 & \dots & b_M \end{bmatrix}_{1 \times M}$$
 
 ---
